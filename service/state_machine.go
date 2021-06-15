@@ -47,6 +47,12 @@ func (sm *StateMachine) OnClose(ctx context.Context) error {
 }
 
 func (sm *StateMachine) OnOp(op []byte, param []byte) (result []byte, exit bool, err error) {
+	tracer, closer, _ := CreateTracer("Javis")
+	defer closer.Close()
+
+	startSpan := tracer.StartSpan("StateMachine.OnOp")
+	defer startSpan.Finish()
+
 	log.Info("State machine Op:", op, "session:", sm.sessionInfo())
 	cmd := strings.ToLower(string(op))
 	if cmd == "exit" {

@@ -15,7 +15,6 @@ var addr = flag.String("addr", ":8080", "http service address")
 
 func main() {
 	flag.Parse()
-
 	// init session manager, set global session manager
 	SessionManager = NewSessionMgr()
 	go SessionManager.Run()

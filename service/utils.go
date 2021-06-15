@@ -5,6 +5,10 @@ import (
 	"os"
 
 	"github.com/google/uuid"
+	"github.com/opentracing/opentracing-go"
+	"github.com/uber/jaeger-client-go"
+	jaegercfg "github.com/uber/jaeger-client-go/config"
+	jaegerlog "github.com/uber/jaeger-client-go/log"
 )
 
 func GenerateUUID() string {
@@ -37,4 +41,23 @@ func (s *StdoutWriterCloser) Write(p []byte) (n int, err error) {
 
 func (s *StdoutWriterCloser) Close() error {
 	return nil
+}
+
+func CreateTracer(servieName string) (opentracing.Tracer, io.Closer, error) {
+	var cfg = jaegercfg.Configuration{
+		ServiceName: servieName,
+		Sampler: &jaegercfg.SamplerConfig{
+			Type:  jaeger.SamplerTypeConst,
+			Param: 1,
+		},
+		Reporter: &jaegercfg.ReporterConfig{
+			LogSpans: true,
+		},
+	}
+
+	jLogger := jaegerlog.StdLogger
+	tracer, closer, err := cfg.NewTracer(
+		jaegercfg.Logger(jLogger),
+	)
+	return tracer, closer, err
 }
