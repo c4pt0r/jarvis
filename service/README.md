@@ -1,13 +1,14 @@
-Jarvis
+# Jarvis
 
-##A Knowledge Base Robot Demo
+A Websocket-based Knowledge Base Robot Demo
 
 
 Usage:
 
+```
 /remember (or /r) <Text> : Add new knowledge text
 /ask (or /a) <Keyword> : Search by keyword
-
+```
 
 Example:
 
