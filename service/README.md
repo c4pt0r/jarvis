@@ -1,6 +1,6 @@
 # Jarvis
 
-A Knowledge Base Robot Demo
+A Websocket-based Knowledge Base Robot Demo
 
 
 Usage:
