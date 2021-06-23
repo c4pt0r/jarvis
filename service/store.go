@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
 
-	"gorm.io/driver/sqlite"
+	"github.com/opentracing/opentracing-go"
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -24,7 +26,7 @@ var (
 func DB() *gorm.DB {
 	once.Do(func() {
 		var err error
-		db, err = gorm.Open(sqlite.Open("javis.db"), &gorm.Config{})
+		db, err = gorm.Open(mysql.Open("root:@tcp(127.0.0.1:4000)/test?parseTime=true"), &gorm.Config{})
 		if err != nil {
 			panic(err)
 		}
@@ -33,7 +35,7 @@ func DB() *gorm.DB {
 	return db
 }
 
-func PutNewTip(tips string) (string, error) {
+func PutNewTip(ctx context.Context, tips string) (string, error) {
 	r := &Tips{
 		Content: tips,
 	}
@@ -45,12 +47,20 @@ func PutNewTip(tips string) (string, error) {
 	return fmt.Sprintf("%d", r.ID), nil
 }
 
-func SearchTip(keyword string) (string, error) {
+func SearchTip(ctx context.Context, keyword string) (string, error) {
 	var (
 		tips []Tips
 		err  error
 	)
+	if tracer := ctx.Value("tracer_id").(opentracing.TextMapCarrier); tracer != nil {
+		DB().Exec(fmt.Sprintf("set @@session.tracer_id = '%s'", EncodeMap(tracer)))
+	}
 	result := DB().Where("Content LIKE ?", "%"+keyword+"%").Find(&tips)
+
+	if tracer := ctx.Value("tracer_id").(opentracing.TextMapCarrier); tracer != nil {
+		DB().Exec("set @@session.tracer_id = ''")
+	}
+
 	err = result.Error
 	if err != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -62,5 +72,6 @@ func SearchTip(keyword string) (string, error) {
 	for _, r := range tips {
 		output += fmt.Sprintf("KB-%d %s\n", r.ID, r.Content)
 	}
+
 	return output, nil
 }

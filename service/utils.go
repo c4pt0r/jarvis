@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io"
 	"os"
 
@@ -60,4 +61,9 @@ func CreateTracer(servieName string) (opentracing.Tracer, io.Closer, error) {
 		jaegercfg.Logger(jLogger),
 	)
 	return tracer, closer, err
+}
+
+func EncodeMap(m map[string]string) string {
+	b, _ := json.Marshal(m)
+	return string(b)
 }

@@ -23,7 +23,7 @@ func (rwc *WsReadWriteCloser) Read(b []byte) (int, error) {
 }
 
 func (rwc *WsReadWriteCloser) Write(b []byte) (int, error) {
-	err := rwc.c.WriteMessage(websocket.BinaryMessage, b)
+	err := rwc.c.WriteMessage(websocket.TextMessage, b)
 	if err != nil {
 		return 0, err
 	}

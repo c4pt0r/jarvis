@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/ngaut/log"
+	"github.com/opentracing/opentracing-go"
 )
 
 var (
@@ -55,11 +56,20 @@ func (sm *StateMachine) OnOp(op []byte, param []byte) (result []byte, exit bool,
 
 	log.Info("State machine Op:", op, "session:", sm.sessionInfo())
 	cmd := strings.ToLower(string(op))
+
 	if cmd == "exit" {
 		return []byte("Bye"), true, nil
 	}
 	var ret []byte
-	ret, err = sm.opHandler.Handle(cmd, param)
+
+	var carrier opentracing.TextMapCarrier
+	carrier = make(opentracing.TextMapCarrier)
+
+	tracer.Inject(startSpan.Context(), opentracing.TextMap, carrier)
+	log.Info("!!!!!!!!!!!!!!!!", carrier)
+
+	ctx := context.WithValue(context.TODO(), "tracer_id", carrier)
+	ret, err = sm.opHandler.Handle(ctx, cmd, param)
 	if err != nil {
 		log.Error(err)
 		ret = []byte(err.Error())
